@@ -1,0 +1,68 @@
+<html>
+
+<head>
+    <style>
+        .card-container {
+            display: flex;
+            max-height: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+    <script>    function clientLoaded() {
+            window.helloSignClient = new window.HelloSign({
+                clientId: '3de48c5892a4cd5b174d8ec348d1f327'
+            });
+             window.helloSignClient.on('finish', (data) => {
+                console.log('Hello Sign finished');
+            });
+            window.helloSignClient.on('sign', (data) => {
+                window.invokeDartFunction("DOC_SIGNED", { signatureId: data.signatureId })
+            });
+            window.helloSignClient.on('createTemplate', (data) => {
+                window.invokeDartFunction("TEMPLATE_CREATED", data)
+            });
+            window.helloSignClient.on('close', (data) => {
+                window.invokeDartFunction("WIDGET_CLOSED", null)
+            });
+            window.helloSignClient.on('error', (data) => {
+                window.helloSignClient.close();
+                window.invokeDartFunction("ERROR_WITH_URL", { signatureId: data.signatureId, code: data.code })
+                alert("ERROR_WITH_URL : " + data.code);
+            });
+        }
+    </script>
+    <script src="../js/embedded.production.min.js" onload="clientLoaded()"></script>
+    <script>    
+    window.parent.addEventListener('message', handleMessage, false);
+    window.addEventListener('message', handleMessage, false);
+        function handleMessage(e) {
+            console.log("post message handler :: STARTED")
+            if (e.data.topic === "OPEN_SIGN_WIDGET") {
+                // console.log(e.data);
+                // console.log('URL: ', e.data.payload.url)
+                window.helloSignClient.open(e.data.payload.url, {
+                    testMode: true
+                });
+            }
+        }
+        window.invokeDartFunction = function (topic, payload) {
+            const data = {
+                topic: topic,
+                payload: payload
+            }
+            window.parent.postMessage(data.topic, "*");
+        }
+        
+    </script>
+</head>
+
+<body>
+    <div class="card-container">
+    
+    </div>
+</body>
+
+</html>
